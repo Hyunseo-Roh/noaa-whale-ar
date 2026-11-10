@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Where whales go matters · AR prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="./lib/aframe.min.js"></script>
+<script src="./lib/mindar-image-aframe.prod.js"></script>
+<style>
+  :root { --deep: #003087; --night: #0A2240; --sky: #0085CA; --haze: #DCEBF5; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: "Libre Franklin", system-ui, sans-serif; }
+  .panel { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; justify-content: center;
+           padding: 32px 28px calc(28px + env(safe-area-inset-bottom)); box-sizing: border-box; background: var(--deep); color: #fff; }
+  .panel h1 { font-weight: 900; font-size: 34px; line-height: 1.08; margin: 0 0 8px; }
+  .panel .kicker { color: #9FD6F5; font-weight: 700; font-size: 14px; margin-bottom: 14px; }
+  .panel img.sign { width: 100%; max-width: 420px; border-radius: 6px; margin: 18px 0 22px; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
+  .panel ol { margin: 0 0 26px; padding: 0; list-style: none; counter-reset: s; }
+  .panel li { counter-increment: s; position: relative; padding-left: 36px; margin: 0 0 12px; font-size: 16px; line-height: 1.4; }
+  .panel li::before { content: counter(s); position: absolute; left: 0; top: -1px; width: 24px; height: 24px; border-radius: 50%;
+                      background: #fff; color: var(--deep); font-weight: 700; font-size: 14px; display: grid; place-items: center; }
+  .panel button { font: 700 18px "Libre Franklin", system-ui, sans-serif; color: var(--deep); background: #fff; border: 0;
+                  border-radius: 999px; padding: 16px 28px; align-self: flex-start; }
+  .panel .note { margin-top: 22px; font-size: 12px; color: rgba(255,255,255,.7); line-height: 1.4; }
+  #scanning { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+  .hidden { display: none !important; }
+  #scanning .frame { position: absolute; left: 50%; top: 46%; width: 78vw; max-width: 520px; aspect-ratio: 16 / 9; transform: translate(-50%, -50%);
+                     border: 2px solid rgba(255,255,255,.9); border-radius: 10px; box-shadow: 0 0 0 100vmax rgba(10,34,64,.25); }
+  #scanning .hint { position: absolute; left: 0; right: 0; bottom: calc(40px + env(safe-area-inset-bottom)); text-align: center; color: #fff;
+                    font-weight: 700; font-size: 17px; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+  #found { position: fixed; left: 16px; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 6; display: none;
+           background: #fff; color: var(--night); border-radius: 14px; padding: 12px 16px; font-size: 14px; line-height: 1.35; }
+  #found b { display: block; font-size: 15px; }
+  #error { display: none; }
+</style>
+</head>
+<body>
+
+<div class="panel" id="start">
+  <div class="kicker">AR prototype · Great Hall, Aquarium of the Pacific</div>
+  <h1>Where whales<br>go matters</h1>
+  <img class="sign" src="./assets/sign.png" alt="The sign: Where whales go matters">
+  <ol>
+    <li>Tap Start and allow the camera.</li>
+    <li>Point your phone at this sign.</li>
+    <li>Watch the blue whale swim her route, from Long Beach to the Costa Rica Dome.</li>
+  </ol>
+  <button id="go">Start</button>
+</div>
+
+<div class="panel" id="error">
+  <h1>The camera didn’t start</h1>
+  <p>Open this page in Safari (iPhone) or Chrome (Android), allow the camera, and try again.</p>
+  <button onclick="location.reload()">Try again</button>
+</div>
+
+<div id="scanning" class="hidden"><div class="frame"></div><div class="hint">Point your phone at the sign</div></div>
+<div id="found"><b>Blue whale · her route south</b>Summer off this coast; in winter, some swim as far as the Costa Rica Dome.</div>
+
+<a-scene id="scene"
+  mindar-image="imageTargetSrc: ./assets/sign.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: #scanning; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 12; warmupTolerance: 3"
+  color-space="sRGB" renderer="colorManagement: true; alpha: true" vr-mode-ui="enabled: false" xr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+  <a-assets>
+    <img id="lines" src="./assets/lines.png" crossorigin="anonymous">
+    <img id="whale" src="./assets/whale.png" crossorigin="anonymous">
+    <img id="chip" src="./assets/chip.png" crossorigin="anonymous">
+    <img id="card" src="./assets/card.png" crossorigin="anonymous">
+  </a-assets>
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <!-- the sign is 1 unit wide and 0.5625 tall; the route floats in front of it -->
+  <a-entity mindar-image-target="targetIndex: 0" id="target">
+    <a-plane src="#chip" width="0.56" height="0.0747" position="0 0.40 0.04"
+             material="shader: flat; transparent: true; alphaTest: 0.02"></a-plane>
+    <a-entity position="0 0.02 0.22">
+      <a-plane src="#lines" width="1.8" height="0.63" material="shader: flat; transparent: true; alphaTest: 0.02"
+               animation="property: position; from: -0.04 0 0; to: 0.04 0 0; dur: 3200; dir: alternate; loop: true; easing: easeInOutSine"></a-plane>
+      <a-plane src="#whale" width="0.62" height="0.124" position="-0.8 0.06 0.05"
+               material="shader: flat; transparent: true; alphaTest: 0.02"
+               animation__swim="property: position; from: -0.85 0.08 0.05; to: 0.85 -0.02 0.05; dur: 11000; loop: true; easing: linear"
+               animation__bob="property: rotation; from: 0 0 3; to: 0 0 -3; dur: 2200; dir: alternate; loop: true; easing: easeInOutSine"></a-plane>
+    </a-entity>
+    <a-plane id="cardplane" src="#card" width="0.62" height="0.378" position="0 -0.52 0.05" scale="0.001 0.001 0.001"
+             material="shader: flat; transparent: true; alphaTest: 0.02"
+             animation__in="property: scale; to: 1 1 1; dur: 600; easing: easeOutCubic; startEvents: show"
+             animation__out="property: scale; to: 0.001 0.001 0.001; dur: 1; startEvents: hide"></a-plane>
+  </a-entity>
+</a-scene>
+
+<script>
+  const scene = document.getElementById('scene');
+  const target = document.getElementById('target');
+  const found = document.getElementById('found');
+  const card = document.getElementById('cardplane');
+  document.getElementById('go').addEventListener('click', async () => {
+    document.getElementById('start').style.display = 'none';
+    try {
+      const run = () => scene.systems['mindar-image-system'].start();
+      if (scene.hasLoaded) await run(); else scene.addEventListener('loaded', run, { once: true });
+    } catch (e) {
+      document.getElementById('error').style.display = 'flex';
+    }
+  });
+  scene.addEventListener('arError', () => { document.getElementById('error').style.display = 'flex'; });
+  target.addEventListener('targetFound', () => { found.style.display = 'block'; card.emit('show'); });
+  target.addEventListener('targetLost', () => { found.style.display = 'none'; card.emit('hide'); });
+</script>
+</body>
+</html>
